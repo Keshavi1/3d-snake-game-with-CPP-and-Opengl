@@ -1,7 +1,8 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
+		//build c/cpp files
+		{	
 			"type": "cppbuild",
 			"label": "C: gcc.exe build active file",
 			"command": "C:\\MinGW\\bin\\gcc.exe",
@@ -10,7 +11,6 @@
 				"-g",
 				"-Wall",
 				"-Wextra",
-				"-Werror",
 				"${file}",
 				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe"
@@ -33,7 +33,6 @@
 				"-g",
 				"-Wall",
 				"-Wextra",
-				"-Werror",
 				"${file}",
 				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe"
@@ -48,6 +47,40 @@
 			
 			"detail": "compiler: C:\\MinGW\\bin\\g++.exe"
 		},
+		// openglbuild
+		{
+			"type": "cppbuild",
+			"label": "C++: g++.exe build active file",
+			"command": "C:\\MinGW\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"-Wall",
+				"-Wextra",
+				"-I./include",
+				"-L./lib",
+				"src/\\*.cpp",
+    			"src/glad.c",
+    			"-lglfw3dll",
+				"-o",
+    			"${workspaceFolder}/myprogram.exe"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			
+			"detail": "compiler: C:\\MinGW\\bin\\g++.exe"
+		},
+
+
+		// build and rune c/cpp files
 		{
 			"type": "shell",
 			"label": "Run C file: gcc.exe",
@@ -56,10 +89,7 @@
 			"options": {
 				"cwd": "C:\\MinGW\\bin"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			
 			"problemMatcher": [
 				"$gcc"
 			],
