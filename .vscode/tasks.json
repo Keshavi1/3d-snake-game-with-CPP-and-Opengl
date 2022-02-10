@@ -49,7 +49,7 @@
 		},
 		// openglbuild
 		{
-			"type": "cppbuild",
+			"type": "shell",
 			"label": "C++: g++.exe build active file",
 			"command": "C:\\MinGW\\bin\\g++.exe",
 			"args": [
@@ -57,16 +57,16 @@
 				"-g",
 				"-Wall",
 				"-Wextra",
-				"-I./include",
-				"-L./lib",
-				"src/\\*.cpp",
-    			"src/glad.c",
+				"-I${workspaceFolder}/include",
+				"-L${workspaceFolder}/lib",				
+				"${workspaceFolder}/src/\\*.cpp",				
+				"${workspaceFolder}/src/glad.c",
     			"-lglfw3dll",
 				"-o",
     			"${workspaceFolder}/myprogram.exe"
 			],
 			"options": {
-				"cwd": "${fileDirname}"
+				"cwd": "${workspaceFolder}"
 			},
 			"group": {
 				"kind": "build",
