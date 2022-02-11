@@ -95,5 +95,10 @@
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"typeinfo": "cpp"
-	}
+	},
+	"cSpell.words": [
+		"glfw",
+		"OPENGL",
+		"vect"
+	]
 }
