@@ -97,8 +97,16 @@
 		"typeinfo": "cpp"
 	},
 	"cSpell.words": [
+		"APIENTRYP",
 		"glfw",
+		"Integerv",
+		"khrplatform",
+		"namez",
 		"OPENGL",
+		"PFNGLACTIVETEXTUREPROC",
+		"PFNWGLGETPROCADDRESSPROC",
+		"Programiv",
+		"Stringi",
 		"vect"
 	]
 }

@@ -50,7 +50,7 @@
 		// openglbuild
 		{
 			"type": "shell",
-			"label": "C++: g++.exe build active file",
+			"label": "OpenGl C++: g++.exe build active file",
 			"command": "C:\\MinGW\\bin\\g++.exe",
 			"args": [
 				"-fdiagnostics-color=always",
