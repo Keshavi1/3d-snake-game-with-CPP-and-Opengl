@@ -6,7 +6,7 @@
 #include <iostream>
 #include <math.h>
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, float &movementX, float &movementY);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -54,9 +54,9 @@ int main()
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------ 
     float vertices[] = {
-        0.5f,-0.5f,0.0f, 1.0f,0.0f,0.0f,//left leg top left
-        -0.5f,-0.5f,0.0f, 0.0f,1.0f,0.0f,//left leg top right
-        0.0f,0.5f,0.0f, 0.0f,0.0f,1.0f,//left leg bottom left
+        0.3f,0.3f,0.0f, 1.0f,0.0f,0.0f,//
+        -0.3f,0.3f,0.0f, 0.0f,1.0f,0.0f,//
+        0.0f,-0.3f,0.0f, 0.0f,0.0f,1.0f,//
         
     };
 
@@ -89,11 +89,13 @@ int main()
 
     // render loop
     // -----------
+    float movementX = 0.0f;
+    float movementY = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
         // input
         // -----
-        processInput(window);
+        processInput(window,movementX,movementY);
 
         // render
         // ------
@@ -101,9 +103,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
 
-
         // draws
         shader.use();
+        int vertexLocation = glGetUniformLocation(shader.ID,"offset");
+        glUniform3f(vertexLocation,movementX,movementY,0.0f);
         glBindVertexArray(VAO[0]); 
         glDrawArrays(GL_TRIANGLES,0,3);
         
@@ -130,10 +133,24 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, float &movementX, float &movementY)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
+    }
+        
+    if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS){
+        movementX += 0.001f;
+    } 
+    if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS){
+        movementX -= 0.001f;
+    }
+    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS){
+        movementY += 0.001f;
+    } 
+    if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS){
+        movementY -= 0.001f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
