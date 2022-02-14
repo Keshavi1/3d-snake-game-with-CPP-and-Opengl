@@ -63,7 +63,7 @@
 				"${workspaceFolder}/src/glad.c",
     			"-lglfw3dll",
 				"-o",
-    			"${workspaceFolder}/myprogram.exe"
+    			"${workspaceFolder}/program.exe"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
