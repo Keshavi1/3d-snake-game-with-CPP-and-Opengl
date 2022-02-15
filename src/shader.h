@@ -43,8 +43,6 @@ class Shader{
         const char* fShaderCode = fragmentCode.c_str();
         // compile shaders
         unsigned int vertex, fragment;
-        int success;
-        char loginfo[512];
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex,1,&vShaderCode,NULL);

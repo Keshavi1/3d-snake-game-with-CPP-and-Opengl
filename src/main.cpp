@@ -1,12 +1,12 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
 #include "shader.h"
 
 #include <iostream>
 #include <math.h>
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window, float &movementX, float &movementY);
+void processInput(GLFWwindow *window, float &movementX, float &movementY, float &size);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -53,19 +53,32 @@ int main()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------ 
+    float size = 0.1f;
     float vertices[] = {
-        0.3f,0.3f,0.0f, 1.0f,0.0f,0.0f,//
-        -0.3f,0.3f,0.0f, 0.0f,1.0f,0.0f,//
-        0.0f,-0.3f,0.0f, 0.0f,0.0f,1.0f,//
+        size,-size,0.0f, 1.0f,0.0f,0.0f,//
+        -size,-size,0.0f, 0.0f,1.0f,0.0f,//
+        0.0f,size,0.0f, 0.0f,0.0f,1.0f,//
         
     };
+    float texCoords[] = {
+        0.0f,0.0f,
+        1.0f,0.0f,
+        0.5f,1.0f
+    };
+    // texture wraping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_MIRRORED_REPEAT);
+    // texture filtering
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // mipmap
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
     unsigned int VBO[3], VAO[3], EBO[3];
     glGenVertexArrays(3, VAO);
     glGenBuffers(3, VBO);
     glGenBuffers(3,EBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    // draws the T
     glBindVertexArray(VAO[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -95,7 +108,7 @@ int main()
     {
         // input
         // -----
-        processInput(window,movementX,movementY);
+        processInput(window,movementX,movementY,size);
 
         // render
         // ------
@@ -111,7 +124,6 @@ int main()
         glDrawArrays(GL_TRIANGLES,0,3);
         
         // glBindVertexArray(0); // no need to unbind it every time 
- 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -133,7 +145,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window, float &movementX, float &movementY)
+void processInput(GLFWwindow *window, float &movementX, float &movementY, float &size)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
@@ -141,16 +153,21 @@ void processInput(GLFWwindow *window, float &movementX, float &movementY)
         
     if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS){
         movementX += 0.001f;
+        if(movementX > 1.0f + size){movementX = -1.0f - size;}
     } 
     if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS){
         movementX -= 0.001f;
+        if(movementX < -1.0f - size){movementX = 1.0f + size;}
     }
-    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS){
+    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS ){
         movementY += 0.001f;
+        if(movementY > 1.0f + size){movementY = -1.0f - size;}
     } 
     if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS){
         movementY -= 0.001f;
+        if(movementY < -1.0f - size){movementY = 1.0f + size;}
     }
+    
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

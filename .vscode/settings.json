@@ -106,6 +106,7 @@
 		"PFNGLACTIVETEXTUREPROC",
 		"PFNWGLGETPROCADDRESSPROC",
 		"Programiv",
+		"stbi",
 		"Stringi",
 		"vect"
 	]
