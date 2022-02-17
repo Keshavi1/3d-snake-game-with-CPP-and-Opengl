@@ -1,5 +1,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "stb/stb_image.h"
 
 #include "shader.h"
 
@@ -53,26 +54,19 @@ int main()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------ 
-    float size = 0.1f;
+    float size = 0.3f;
     float vertices[] = {
-        size,-size,0.0f, 1.0f,0.0f,0.0f,//
-        -size,-size,0.0f, 0.0f,1.0f,0.0f,//
-        0.0f,size,0.0f, 0.0f,0.0f,1.0f,//
+        // positions       //color      //texture coords
+        size, size,0.0f, 1.0f,0.0f,0.0f, 1.0f,1.0f, //top right
+        size,-size,0.0f, 0.0f,1.0f,0.0f, 1.0f,0.0f, //bottom right
+        -size,-size,0.0f, 0.0f,0.0f,1.0f, 0.0f,0.0f, //bottom left
+        -size,size,0.0f, 1.0f,1.0f,0.0f, 0.0f,1.0f //top left
         
     };
-    float texCoords[] = {
-        0.0f,0.0f,
-        1.0f,0.0f,
-        0.5f,1.0f
+    unsigned int indicies[]={
+        0,1,3,//first triangle
+        1,2,3 //second triangle
     };
-    // texture wraping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_MIRRORED_REPEAT);
-    // texture filtering
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // mipmap
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
     unsigned int VBO[3], VAO[3], EBO[3];
     glGenVertexArrays(3, VAO);
@@ -83,12 +77,18 @@ int main()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
     
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -98,7 +98,31 @@ int main()
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
     // uncomment this call to draw in wireframe polygons.
-    // glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    // *glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+
+    // load and create textures
+    // ------------------------
+    unsigned int texture;
+    glGenTextures(1,&texture);
+    glBindTexture(GL_TEXTURE_2D,texture);
+    // texture wraping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_REPEAT);
+    // texture filtering
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // mipmap
+    
+    // load image textures and mipmap
+    int width, height, rnChannels;
+    unsigned char* data = stbi_load("img/container.jpg", &width, &height, &rnChannels, 0);
+    if(data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,0, GL_RGB,GL_UNSIGNED_BYTE,data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else{
+        std::cout<<"FAILED TO LOAD TEXTURE"<<std::endl;
+    }
+    stbi_image_free(data);
 
     // render loop
     // -----------
@@ -115,13 +139,13 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
+        glBindTexture(GL_TEXTURE_2D,texture);
         // draws
         shader.use();
         int vertexLocation = glGetUniformLocation(shader.ID,"offset");
         glUniform3f(vertexLocation,movementX,movementY,0.0f);
         glBindVertexArray(VAO[0]); 
-        glDrawArrays(GL_TRIANGLES,0,3);
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
         
         // glBindVertexArray(0); // no need to unbind it every time 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
