@@ -7,11 +7,16 @@
 #include <iostream>
 #include <math.h>
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window, float &movementX, float &movementY, float &size);
+void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+float size = 0.5f;
+float movementX = 0.0f;
+float movementY = 0.0f;
+float mixValue = 0.0f;
 
 int main()
 {
@@ -50,11 +55,11 @@ int main()
     // build and compile our shader program
     // ------------------------------------
     // vertex shader
-    Shader shader("src/3.3.shader.v","src/3.3.shader.f");
+    Shader shader("src/shader.v","src/shader.f");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------ 
-    float size = 0.3f;
+    
     float vertices[] = {
         // positions       //color      //texture coords
         size, size,0.0f, 1.0f,0.0f,0.0f, 1.0f,1.0f, //top right
@@ -102,16 +107,17 @@ int main()
 
     // load and create textures
     // ------------------------
-    unsigned int texture;
-    glGenTextures(1,&texture);
-    glBindTexture(GL_TEXTURE_2D,texture);
+    unsigned int texture1, texture2;
+
+    glGenTextures(1,&texture1);
+    glBindTexture(GL_TEXTURE_2D,texture1);
     // texture wraping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_REPEAT);
     // texture filtering
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // mipmap
+
     
     // load image textures and mipmap
     int width, height, rnChannels;
@@ -120,30 +126,58 @@ int main()
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,0, GL_RGB,GL_UNSIGNED_BYTE,data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else{
-        std::cout<<"FAILED TO LOAD TEXTURE"<<std::endl;
+        std::cout<<"FAILED TO LOAD CONTAINER"<<std::endl;
     }
     stbi_image_free(data);
 
+    glGenTextures(1,&texture2);
+    glBindTexture(GL_TEXTURE_2D,texture2);
+    // texture wraping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_REPEAT);
+    // texture filtering
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    data = stbi_load("img/awesomeface.png", &width, &height, &rnChannels,0);
+    if(data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout<<"FAILED TO LOAD AWESOMEFACE"<<std::endl;
+    }
+    stbi_image_free(data);
+
+    // tells OpenGl for each sampler which texture unit it belongs to
+    shader.use();
+    shader.setInt("texture1",0);
+    shader.setInt("texture2",1);
+
     // render loop
     // -----------
-    float movementX = 0.0f;
-    float movementY = 0.0f;
+    
     while (!glfwWindowShouldClose(window))
     {
         // input
         // -----
-        processInput(window,movementX,movementY,size);
+        processInput(window);
 
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glBindTexture(GL_TEXTURE_2D,texture);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+        
         // draws
         shader.use();
         int vertexLocation = glGetUniformLocation(shader.ID,"offset");
         glUniform3f(vertexLocation,movementX,movementY,0.0f);
+        shader.setFloat("mixValue",mixValue);
         glBindVertexArray(VAO[0]); 
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
         
@@ -169,7 +203,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window, float &movementX, float &movementY, float &size)
+void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
@@ -190,6 +224,16 @@ void processInput(GLFWwindow *window, float &movementX, float &movementY, float 
     if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS){
         movementY -= 0.001f;
         if(movementY < -1.0f - size){movementY = 1.0f + size;}
+    }
+    if(glfwGetKey(window,GLFW_KEY_W)==GLFW_PRESS){
+        if(mixValue < 1.0f){
+            mixValue += 0.001f;
+        }
+    }
+    if(glfwGetKey(window,GLFW_KEY_S)==GLFW_PRESS){
+        if(mixValue > 0.0f){
+            mixValue -= 0.001f;
+        }
     }
     
 }
