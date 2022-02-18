@@ -1,8 +1,11 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "stb/stb_image.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
-#include "shader.h"
+#include "shaders/shader.h"
 
 #include <iostream>
 #include <math.h>
@@ -50,12 +53,12 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-
+    
 
     // build and compile our shader program
     // ------------------------------------
     // vertex shader
-    Shader shader("src/shader.v","src/shader.f");
+    Shader shader("include/shaders/shader.v","include/shaders/shader.f");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------ 
@@ -72,6 +75,7 @@ int main()
         0,1,3,//first triangle
         1,2,3 //second triangle
     };
+    
 
     unsigned int VBO[3], VAO[3], EBO[3];
     glGenVertexArrays(3, VAO);
@@ -153,6 +157,8 @@ int main()
     shader.setInt("texture1",0);
     shader.setInt("texture2",1);
 
+    
+
     // render loop
     // -----------
     
@@ -172,11 +178,15 @@ int main()
         glBindTexture(GL_TEXTURE_2D,texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f,0.0f,1.0f));
+        trans = glm::scale(trans, glm::vec3(0.5,0.5,0.5));
         
         // draws
         shader.use();
-        int vertexLocation = glGetUniformLocation(shader.ID,"offset");
-        glUniform3f(vertexLocation,movementX,movementY,0.0f);
+        unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
+        glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
         shader.setFloat("mixValue",mixValue);
         glBindVertexArray(VAO[0]); 
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
