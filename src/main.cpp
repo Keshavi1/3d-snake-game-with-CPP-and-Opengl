@@ -16,7 +16,7 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-float size = 0.5f;
+float size = 0.2f;
 float movementX = 0.0f;
 float movementY = 0.0f;
 float mixValue = 0.0f;
@@ -179,13 +179,17 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // transformation fuctions for the position, size and rotation of the image
         glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f,0.0f,1.0f));
-        trans = glm::scale(trans, glm::vec3(0.5,0.5,0.5));
+        trans = glm::translate(trans, glm::vec3(movementX,movementY,0.0f));
+        trans = glm::scale(trans, glm::vec3(size,size,size));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f,0.0f,1.0f));
         
-        // draws
+        
+        
+        // draws image and changes any uniform values
         shader.use();
-        unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
+        unsigned int transformLoc = glGetUniformLocation(shader.ID,"transformation");
         glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
         shader.setFloat("mixValue",mixValue);
         glBindVertexArray(VAO[0]); 
@@ -218,32 +222,36 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
-        
+    // transitions the image in a direction
     if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS){
         movementX += 0.001f;
-        if(movementX > 1.0f + size){movementX = -1.0f - size;}
+        if(movementX > 1.0f + size*1.3f){movementX = -1.0f - size;}
     } 
     if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS){
         movementX -= 0.001f;
-        if(movementX < -1.0f - size){movementX = 1.0f + size;}
+        if(movementX < -1.0f - size*1.3f){movementX = 1.0f + size;}
     }
     if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS ){
         movementY += 0.001f;
-        if(movementY > 1.0f + size){movementY = -1.0f - size;}
+        if(movementY > 1.0f + size*1.3f){movementY = -1.0f - size;}
     } 
     if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS){
         movementY -= 0.001f;
-        if(movementY < -1.0f - size){movementY = 1.0f + size;}
+        if(movementY < -1.0f - size*1.3f){movementY = 1.0f + size;}
     }
+    // changing the mix of over laping textures
     if(glfwGetKey(window,GLFW_KEY_W)==GLFW_PRESS){
-        if(mixValue < 1.0f){
-            mixValue += 0.001f;
-        }
+        if(mixValue < 1.0f){mixValue += 0.001f;}
     }
     if(glfwGetKey(window,GLFW_KEY_S)==GLFW_PRESS){
-        if(mixValue > 0.0f){
-            mixValue -= 0.001f;
-        }
+        if(mixValue > 0.0f){mixValue -= 0.001f;}
+    }
+    // scaling size
+    if(glfwGetKey(window,GLFW_KEY_A)==GLFW_PRESS){
+        if(size >0.1f){size -= 0.001f;}
+    }
+    if(glfwGetKey(window,GLFW_KEY_D)==GLFW_PRESS){
+        if(size <2.0f){size += 0.001f;}
     }
     
 }
