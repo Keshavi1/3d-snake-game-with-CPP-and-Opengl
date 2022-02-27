@@ -1,13 +1,12 @@
 
 /** 
- * todo: Fix the load texture method in Cube,
- * todo: make a ground and figure out how to create colision
+ * todo: Fix the load texture method in Cube
+ * todo: improve colision
+ * todo: make enemies
+ * todo: make player able to shoot bullets
+ * 
+ * !Bugs: the texture method, player teleports to other objects when they collide with an object some times.
  */ 
-
-
-
-
-
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -95,13 +94,15 @@ int main()
     std::uniform_real_distribution<float> posDis(0.0, 100.0), sizeDis(0.5,2.0), colDis(0.0,1.0);
     std::vector<Cube> cubes;
     Cube cube(155.0f,1.0f,155.0f, 0.2f, 0.8f, 0.1f);
-    cube.position = glm::vec3(0.0f,-10.0f,-10.0f);
+    cube.position = glm::vec3(-100.0f,-2.0f,0.0f);
     cubes.push_back(cube);
-    for(int i = 0; i < 100; i++){
-        Cube cube(2.0f,2.0f,2.0f, colDis(gen), colDis(gen), colDis(gen));
-        cube.position = glm::vec3(posDis(gen),-9.0f,posDis(gen));
+    for(float i = 0.0f; i < 10.0f; i++){
+        Cube cube(3.0f,2.0f,2.0f, colDis(gen), colDis(gen), colDis(gen));
+        cube.position = glm::vec3(0.0f + (i*10),-1.0f,0.0f); 
         cubes.push_back(cube);
     }
+    
+    
     player.setCollisionGroup(cubes, false);
     
     // unsigned int texture1;

@@ -29,12 +29,13 @@ const float ZOOM = 45.0f;
 class Player {
 public:
     // camera atrributes
-    glm::vec3 Position, Front, Up, Right, WorldUp;
+    glm::vec3 Position, Front, movementFront, Up, Right, WorldUp;
     //Euler Angles
     float Yaw, Pitch;
     //camera options
     float movementSpeed, mouseSensitivity,Zoom;
 
+    Player_Movement lastDirection;
     float velocityY;
     std::vector<Cube> CollisionGroup;
     std::vector<Cube> EnemyCollisionGroup;
@@ -46,6 +47,7 @@ public:
     {
         Position = position;
         WorldUp = up;
+        movementFront = Front;
         Yaw = yaw;
         Pitch = pitch;
         collidingX = collidingY = collidingZ = false;
@@ -57,6 +59,7 @@ public:
     {
         Position = glm::vec3(posX,posY,posZ);
         WorldUp = glm::vec3(upX,upY,upZ);
+        movementFront = Front;
         Yaw = yaw;
         Pitch = pitch;
         collidingX = collidingY = collidingZ = false;
@@ -70,22 +73,16 @@ public:
         }
     }
     void checkCollisions(){
-        for(auto object: CollisionGroup){
-            collidingY = false;
-            if(Position.y - 1.0f <= object.position.y){
-                Position.y = object.position.y + 1.0f;
-                collidingY = true;
-                velocityY = 0.0f;
-                break;
-            }
-                
-        }
+        checkColX();
+        checkColY();
+        checkColZ();
     }
     void applyGravity(){
-        if(!collidingY && velocityY < 10.0f){
+        if(!collidingY && velocityY < 10.0f)
             velocityY += 0.01f;
-        }
         Position.y -= velocityY * 0.001f;
+        if(Position.y <-10.0f)
+            Position = glm::vec3(0.0f,0.0f,0.0f);
     }
     // returns the view matrix calculated by the Euler angles and lookat matrix
     glm::mat4 GetViewMatrix(){
@@ -98,14 +95,39 @@ public:
         float velocity = movementSpeed * deltaTime;
         if(sprinting)
             velocity *=2;
-        if(direction == FORWARD && !collidingZ)
-            Position += Front * velocity;
-        if(direction == BACKWORD && ! collidingZ)
-            Position -= Front * velocity;
-        if(direction == RIGHT)
-            Position += Right * velocity;
-        if(direction == LEFT)
-            Position -= Right * velocity;
+        if(direction == FORWARD){
+            if(!collidingZ){
+                Position += movementFront * velocity;
+            } else if(lastDirection != FORWARD){
+                Position += movementFront * velocity;
+            } 
+            lastDirection = FORWARD;
+        }         
+        if(direction == BACKWORD){
+            if(!collidingZ){
+                Position -= movementFront * velocity;
+            } else if(lastDirection != BACKWORD){
+                Position -= movementFront * velocity;
+            } 
+            lastDirection = BACKWORD;
+        }   
+        if(direction == RIGHT){
+            if(!collidingX){
+                Position += Right * velocity;
+            } else if(lastDirection != RIGHT){
+                Position += Right * velocity;
+            } 
+            lastDirection = RIGHT;
+        }        
+        if(direction == LEFT){
+            if(!collidingX){
+                Position -= Right * velocity;
+            } else if(lastDirection != LEFT){
+                Position -= Right * velocity;
+            } 
+            lastDirection = LEFT;
+        }
+            
         if(direction == UP && collidingY){
             velocityY = -10.0f;
             Position.y += 0.01f;
@@ -118,7 +140,7 @@ public:
         yoffset *= mouseSensitivity;
 
         Yaw += xoffset;
-        // Pitch += yoffset;
+        Pitch += yoffset;
 
         // stops pitch from going out of bounds. screen would flip otherwise
         if(constrainPitch){
@@ -142,7 +164,7 @@ public:
 private:
 // calculate the front vector from cameras updated Euler angles
     void updateCameravectors(){
-        // calculate new vector
+        // calculate new vector for the camera
         glm::vec3 front = glm::vec3(
             cos(glm::radians(Yaw)) * cos(glm::radians(Pitch)),//direction.x
             sin(glm::radians(Pitch)),//direction.y
@@ -151,6 +173,55 @@ private:
         Front = glm::normalize(front);
         Right = glm::normalize(glm::cross(Front, WorldUp));
         Up = glm::normalize(glm::cross(Right,Front));
+        // calculates the direction of the x and z vectors
+        front = glm::vec3(
+            cos(glm::radians(Yaw)) * cos(glm::radians(Pitch)),//direction.x
+            sin(glm::radians(0.0f)),//direction.y
+            sin(glm::radians(Yaw)) * cos(glm::radians(Pitch))//direction.z
+        );
+        movementFront = glm::normalize(front);
+    }
+    void checkColX(){
+        for(auto obj: CollisionGroup){
+            collidingX = false;
+            float z = Position.z, oz = obj.position.z, y = Position.y, oy = obj.position.y;
+            if(y > oy && y < oy + obj.SizeY && z > oz && z < oz + obj.SizeZ)
+                if(Position.x + 1.0f <= obj.position.x + obj.SizeX){
+                    Position.x = obj.position.x + obj.SizeX - 1.0f;
+                    collidingX = true;
+                    break;
+                }
+                
+        }
+    }
+    // gets colision in the y direction
+    void checkColY(){
+        for(auto obj: CollisionGroup){
+            collidingY = false;
+            float x = Position.x, ox = obj.position.x, z = Position.z, oz = obj.position.z;
+            if(x > ox && x < ox + obj.SizeX && z > oz && z < oz + obj.SizeZ)
+                if(Position.y - 1.0f <= obj.position.y + obj.SizeY){
+                    Position.y = obj.position.y + obj.SizeY + 1.0f;
+                    collidingY = true;
+                    velocityY = 0.0f;
+                    break;
+                }
+                
+        }
+    }
+    
+    void checkColZ(){
+        for(auto obj: CollisionGroup){
+            collidingZ = false;
+            float x = Position.x, ox = obj.position.x, y = Position.y, oy = obj.position.y;
+            if(x > ox && x < ox + obj.SizeX && y > oy && y < oy + obj.SizeY)
+                if(Position.z - 1.0f <= obj.position.z + obj.SizeZ){
+                    Position.z = obj.position.z + obj.SizeZ + 1.0f;
+                    collidingZ = true;
+                    break;
+                }
+                
+        }
     }
 
     

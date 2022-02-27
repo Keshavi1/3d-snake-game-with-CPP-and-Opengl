@@ -16,6 +16,7 @@ public:
     unsigned int texture1, texture2;
     bool Rotate;
     glm::vec3 position;
+    float SizeX, SizeY, SizeZ;
     // constructer for creating a cube 
     Cube(float sizeX, float sizeY, float sizeZ, float r, float g, float b, bool rotate = false){
         float vertices[] = {
@@ -62,7 +63,9 @@ public:
         Rotate = rotate;
 
         position = glm::vec3(0.0f,0.0f,0.0f);
-
+        SizeX = sizeX;
+        SizeY = sizeY;
+        SizeZ = sizeZ;
     }
     // !very buggy
     void loadTexture(const char *Filename, bool transparent, unsigned int &texture){
