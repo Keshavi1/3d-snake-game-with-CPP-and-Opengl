@@ -10,7 +10,7 @@ uniform float mixValue;
 
 void main()
 {
-   FragColor = vec4(vColor, 1.0); //mix(texture(texture1,texCoord) , texture(texture2,texCoord*-1), mixValue)
+   FragColor = vec4(vColor, 1.0); 
 
 };
 //fragment shader

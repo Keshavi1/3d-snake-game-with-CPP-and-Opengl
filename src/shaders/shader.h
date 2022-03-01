@@ -10,7 +10,7 @@
 #include <iostream>
 
 class Shader{
-    public:
+public:
     // the program ID
     unsigned int ID;
     // constructs reads and builds the shader
@@ -84,7 +84,7 @@ class Shader{
         glUniformMatrix4fv(glGetUniformLocation(ID,name.c_str()),1,GL_FALSE,glm::value_ptr(value));
     }
     
-    private:
+private:
     // utility fuction for checking link/compilation errors
     void checkCompileErrors(unsigned int shader, std::string type){
         int success;

@@ -39,6 +39,7 @@ float size = 0.2f;
 float mixValue = 0.0f;
 // camera
 Player player(glm::vec3(0.0f,0.0f,3.0f));
+std::vector<Cube> playerbullets;
 float lastX = SCR_WIDTH/2.0, lastY=SCR_HEIGHT/2.0;
 bool firstMouse = true;
 // timing
@@ -94,16 +95,26 @@ int main()
     std::uniform_real_distribution<float> posDis(0.0, 100.0), sizeDis(0.5,2.0), colDis(0.0,1.0);
     std::vector<Cube> cubes;
     Cube cube(155.0f,1.0f,155.0f, 0.2f, 0.8f, 0.1f);
-    cube.position = glm::vec3(-100.0f,-2.0f,0.0f);
+    cube.Position = glm::vec3(-100.0f,-2.0f,0.0f);
     cubes.push_back(cube);
     for(float i = 0.0f; i < 10.0f; i++){
         Cube cube(3.0f,2.0f,2.0f, colDis(gen), colDis(gen), colDis(gen));
-        cube.position = glm::vec3(0.0f + (i*10),-1.0f,0.0f); 
+        cube.Position = glm::vec3(-50.0f + (i*10),-1.0f,40.0f); 
+        cubes.push_back(cube);
+
+        
+    }
+    for(float i = 0; i < 10.0f; i++){
+        Cube cube(3.0f,2.0f,3.0f, colDis(gen), colDis(gen), colDis(gen));
+        cube.Position = glm::vec3(-30.0f + (i*10),3.0f,20.0f); 
+        cube.Speed = 1.5f;
         cubes.push_back(cube);
     }
     
     
+    
     player.setCollisionGroup(cubes, false);
+    
     
     // unsigned int texture1;
     // cube.loadTexture("img/container.jpg", false, texture1);
@@ -176,10 +187,6 @@ int main()
         glClearColor(0.2f, 0.4f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        
-        
-
         // transformation fuctions for the position, size and rotation of the image
         shader.use();
         glm::mat4 projection = glm::perspective(glm::radians(player.Zoom), (float)SCR_WIDTH/SCR_HEIGHT, 0.1f, 100.0f);
@@ -187,15 +194,16 @@ int main()
         // camera/ view transforplayer
         glm::mat4 view = player.GetViewMatrix();
         shader.setUniform("view", view);
-        
-        shader.setUniform("mixValue",mixValue); 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D,texture1);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, texture2);
 
         for(auto cube: cubes){
             cube.draw(shader);
+        }
+        for(auto b: playerbullets){
+            b.draw(shader);
         }
         player.checkCollisions();
         player.applyGravity();
@@ -228,27 +236,22 @@ void processInput(GLFWwindow *window)
     }
     // transitions the player in a direction
     if(glfwGetKey(window,GLFW_KEY_W)==GLFW_PRESS)
-        player.processKeyboard(FORWARD, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS); 
+        player.processInput(FORWARD, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS); 
 
     if(glfwGetKey(window,GLFW_KEY_S)==GLFW_PRESS)
-        player.processKeyboard(BACKWORD, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
+        player.processInput(BACKWORD, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
 
     if(glfwGetKey(window,GLFW_KEY_A)==GLFW_PRESS)
-        player.processKeyboard(LEFT, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
+        player.processInput(LEFT, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
 
     if(glfwGetKey(window,GLFW_KEY_D)==GLFW_PRESS)
-        player.processKeyboard(RIGHT, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
+        player.processInput(RIGHT, deltaTime, glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS);
 
     if(glfwGetKey(window,GLFW_KEY_SPACE)==GLFW_PRESS)
-        player.processKeyboard(UP, deltaTime);
+        player.processInput(UP, deltaTime);
 
-    // changing the mix of over laping textures
-    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS){
-        if(mixValue < 1.0f){mixValue += 0.001f;}
-    }
-    if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS){
-        if(mixValue > 0.0f){mixValue -= 0.001f;}
-    }
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        playerbullets.push_back(player.processInput());
     
 }
 // when ever mouse moves, this callback is called
@@ -266,7 +269,7 @@ void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn){
     lastX = xPos;
     lastY = yPos;
 
-    player.processMouseInput(xOffset,yOffset);
+    player.processMouseMovement(xOffset,yOffset);
     
 }
 // whenever the mouse wheel scrolls, this callback is called

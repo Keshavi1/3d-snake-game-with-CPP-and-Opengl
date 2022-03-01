@@ -14,7 +14,7 @@ void main()
 {
    gl_Position = projection * view *  model * vec4(aPos, 1.0);
    vColor = aColor; 
-   texCoord = vec2(aTexCoord.x, aTexCoord.y);
+   //texCoord = vec2(aTexCoord.x, aTexCoord.y);
 
 };
 //vertex shader

@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "cube.h"
+#include "shaders/shader.h"
 
 #include <vector>
 
@@ -20,7 +21,7 @@ enum Player_Movement{
 // defult camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 3.5f;
+const float SPEED = 7.5f;
 const float SENSITIVITY = 0.15f;
 const float ZOOM = 45.0f;
 
@@ -90,7 +91,7 @@ public:
     }
     
     // proceses inputs from keyboard like system. Accepts input parameter in the form of camera defined ENUM
-    void processKeyboard(Player_Movement direction, float deltaTime, GLboolean sprinting = false){
+    void processInput(Player_Movement direction, float deltaTime, GLboolean sprinting = false){
         // normalize speed fps
         float velocity = movementSpeed * deltaTime;
         if(sprinting)
@@ -134,8 +135,14 @@ public:
         }
             
     }
-    // process mouse inputs 
-    void processMouseInput(float xoffset, float yoffset, GLboolean constrainPitch = true){
+    // process input from mouse buttons
+    Cube processInput(){
+        Cube bullet(0.1f,0.1f,0.5f,0.8f,0.3f,0.2f);
+        bullet.setBulletVals(Position,Front, Up);
+        return bullet;
+    }
+    // process mouse movement for camera 
+    void processMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true){
         xoffset *= mouseSensitivity;
         yoffset *= mouseSensitivity;
 
@@ -181,16 +188,24 @@ private:
         );
         movementFront = glm::normalize(front);
     }
+    // checks collision in the x direction
     void checkColX(){
         for(auto obj: CollisionGroup){
             collidingX = false;
-            float z = Position.z, oz = obj.position.z, y = Position.y, oy = obj.position.y;
-            if(y > oy && y < oy + obj.SizeY && z > oz && z < oz + obj.SizeZ)
-                if(Position.x + 1.0f <= obj.position.x + obj.SizeX){
-                    Position.x = obj.position.x + obj.SizeX - 1.0f;
+            float z = Position.z, oz = obj.Position.z, y = Position.y, oy = obj.Position.y;
+            //checks if the other coordinates are in a position were colision is possible;
+            if(y > oy && y < oy + obj.SizeY && z > oz && z < oz + obj.SizeZ){
+                // checks the colision on both right and left sides
+                if(Position.x + 1.0f >= obj.Position.x && !(Position.x > obj.Position.x + obj.SizeX)){
+                    Position.x = obj.Position.x - 1.0f;
+                    collidingX = true;
+                    break;
+                } else if(Position.x - 1.0f<= obj.Position.x + obj.SizeX && !(Position.x + 1.0f < obj.Position.x)){
+                    Position.x = obj.Position.x + obj.SizeX + 1.0f;
                     collidingX = true;
                     break;
                 }
+            }
                 
         }
     }
@@ -198,14 +213,22 @@ private:
     void checkColY(){
         for(auto obj: CollisionGroup){
             collidingY = false;
-            float x = Position.x, ox = obj.position.x, z = Position.z, oz = obj.position.z;
-            if(x > ox && x < ox + obj.SizeX && z > oz && z < oz + obj.SizeZ)
-                if(Position.y - 1.0f <= obj.position.y + obj.SizeY){
-                    Position.y = obj.position.y + obj.SizeY + 1.0f;
+            float x = Position.x, ox = obj.Position.x, z = Position.z, oz = obj.Position.z;
+            //checks if the other coordinates are in a position were colision is possible;
+            if(x > ox && x < ox + obj.SizeX && z > oz && z < oz + obj.SizeZ){
+                // checks on both top and bottom sides 
+                if(Position.y - 1.0f<= obj.Position.y + obj.SizeY && !(Position.y < obj.Position.y)){
+                    Position.y = obj.Position.y + obj.SizeY + 1.0f;
                     collidingY = true;
                     velocityY = 0.0f;
                     break;
+                } else if(Position.y + 1.0f > obj.Position.y && !(Position.y > obj.Position.y + obj.SizeY)){
+                    Position.y = obj.Position.y - 1.0f;
+                    velocityY *= -1;
+                    break;
                 }
+            }
+                
                 
         }
     }
@@ -213,18 +236,29 @@ private:
     void checkColZ(){
         for(auto obj: CollisionGroup){
             collidingZ = false;
-            float x = Position.x, ox = obj.position.x, y = Position.y, oy = obj.position.y;
-            if(x > ox && x < ox + obj.SizeX && y > oy && y < oy + obj.SizeY)
-                if(Position.z - 1.0f <= obj.position.z + obj.SizeZ){
-                    Position.z = obj.position.z + obj.SizeZ + 1.0f;
+            float x = Position.x, ox = obj.Position.x, y = Position.y, oy = obj.Position.y;
+            //checks if the other coordinates are in a position were colision is possible;
+            if(x > ox && x < ox + obj.SizeX && y > oy && y < oy + obj.SizeY){
+                // checks on both front and back sides
+                if(Position.z + 1.0f >= obj.Position.z && !(Position.z > obj.Position.z + obj.SizeZ)){
+                    Position.z = obj.Position.z - 1.0f;
+                    collidingZ = true;
+                    break;
+                } else if(Position.z - 1.0f<= obj.Position.z + obj.SizeZ && !(Position.z + 1.0f < obj.Position.z)){
+                    Position.z = obj.Position.z + obj.SizeZ + 1.0f;
                     collidingZ = true;
                     break;
                 }
+            }
+                
                 
         }
     }
+    
 
     
     
 };
+
+
 #endif

@@ -8,15 +8,16 @@
 
 #include "shaders/shader.h"
 
-#include <iostream>
+#include <string>
 
 class Cube {
 public:
     unsigned int VAO, VBO, EBO;
     unsigned int texture1, texture2;
     bool Rotate;
-    glm::vec3 position;
-    float SizeX, SizeY, SizeZ;
+    glm::vec3 Position, Front, Up;
+    float SizeX, SizeY, SizeZ, Speed;
+    std::string type;
     // constructer for creating a cube 
     Cube(float sizeX, float sizeY, float sizeZ, float r, float g, float b, bool rotate = false){
         float vertices[] = {
@@ -62,10 +63,18 @@ public:
 
         Rotate = rotate;
 
-        position = glm::vec3(0.0f,0.0f,0.0f);
+        Position = glm::vec3(0.0f,0.0f,0.0f);
         SizeX = sizeX;
         SizeY = sizeY;
         SizeZ = sizeZ;
+        type = "STATIC";
+    }
+    void setBulletVals(glm::vec3 position, glm::vec3 front, glm::vec3 up){
+        Position = position;
+        Front = glm::normalize(front);
+        Up = up;
+        Speed = 2.0f;
+        type = "BULLET";
     }
     // !very buggy
     void loadTexture(const char *Filename, bool transparent, unsigned int &texture){
@@ -85,13 +94,15 @@ public:
         } else{std::cout<<"TEXTURE FAILED TO LOAD"<<std::endl;}
         stbi_image_free(data);
     }
-
+    void update(){
+        Position.z += static_cast<float>(Speed);
+        if(Position.z > 100 || Position.z < 0) Speed *=-1;
+    }
     void draw(Shader &shader){
         glBindVertexArray(VAO);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, position);
-        if(Rotate)
-            model = glm::rotate(model, glm::radians(20.0f * (float)glfwGetTime()),glm::vec3(1.0f,0.5f,0.5f));
+        update();
+        model = glm::translate(model, Position);
         shader.setUniform("model", model);
         glDrawElements(GL_TRIANGLES,36, GL_UNSIGNED_INT, 0);
     }
