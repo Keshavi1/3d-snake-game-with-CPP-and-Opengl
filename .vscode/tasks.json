@@ -1,52 +1,6 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		//build c/cpp files
-		{	
-			"type": "cppbuild",
-			"label": "C: gcc.exe build active file",
-			"command": "C:\\MinGW\\bin\\gcc.exe",
-			"args": [
-				"-fdiagnostics-color=always",
-				"-g",
-				"-Wall",
-				"-Wextra",
-				"${file}",
-				"-o",
-				"${fileDirname}\\${fileBasenameNoExtension}.exe"
-			],
-			"options": {
-				"cwd": "${fileDirname}"
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			
-			"detail": "compiler: C:\\MinGW\\bin\\gcc.exe"
-		},
-		{
-			"type": "cppbuild",
-			"label": "C++: g++.exe build active file",
-			"command": "C:\\MinGW\\bin\\g++.exe",
-			"args": [
-				"-fdiagnostics-color=always",
-				"-g",
-				"-Wall",
-				"-Wextra",
-				"${file}",
-				"-o",
-				"${fileDirname}\\${fileBasenameNoExtension}.exe"
-			],
-			"options": {
-				"cwd": "${fileDirname}"
-			},
-			
-			"problemMatcher": [
-				"$gcc"
-			],
-			
-			"detail": "compiler: C:\\MinGW\\bin\\g++.exe"
-		},
 		// openglbuild
 		{
 			"type": "shell",
@@ -58,12 +12,13 @@
 				"-Wall",
 				"-Wextra",
 				"-I${workspaceFolder}/include",
-				"-L${workspaceFolder}/lib",				
+				"-L${workspaceFolder}/lib",	
+				"-I${workspaceFolder}/HeaderFiles",			
 				"${workspaceFolder}/src/\\*.cpp",				
 				"${workspaceFolder}/src/glad.c",
     			"-lglfw3dll",
 				"-o",
-    			"${workspaceFolder}/program.exe"
+    			"${workspaceFolder}/make.exe"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -79,35 +34,5 @@
 			"detail": "compiler: C:\\MinGW\\bin\\g++.exe"
 		},
 
-
-		// build and rune c/cpp files
-		{
-			"type": "shell",
-			"label": "Run C file: gcc.exe",
-			"command": "C:\\MinGW\\bin\\gcc.exe -g -Wall -Wextra ${file} -o ${fileDirname}\\${fileBasenameNoExtension}.exe; ${fileDirname}\\${fileBasenameNoExtension}.exe",
-			"args": [],
-			"options": {
-				"cwd": "C:\\MinGW\\bin"
-			},
-			
-			"problemMatcher": [
-				"$gcc"
-			],
-			"detail": "compiler: C:\\MinGW\\bin\\gcc.exe"
-		},
-		{
-			"type": "shell",
-			"label": "Run C++ file: g++.exe",
-			"command": "C:\\MinGW\\bin\\g++.exe -g -Wall -Wextra ${file} -o ${fileDirname}\\${fileBasenameNoExtension}.exe; ${fileDirname}\\${fileBasenameNoExtension}.exe",
-			"args": [],
-			"options": {
-				"cwd": "C:\\MinGW\\bin"
-			},
-			
-			"problemMatcher": [
-				"$gcc"
-			],
-			"detail": "compiler: C:\\MinGW\\bin\\g++.exe"
-		}
 	]
 }

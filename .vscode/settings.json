@@ -113,5 +113,6 @@
 		"stbi",
 		"Stringi",
 		"vect"
-	]
+	],
+	"cmake.configureOnOpen": false
 }
