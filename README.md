@@ -13,6 +13,7 @@ I also added some other obsticals for you to avoid as well.
 And also, I will update this as I learn to do more with openGL. 
 
 Controls:
+
 D: turns you to the right of whatever direction your moving
 
 A: turns you to the left of whatever direction your moving
