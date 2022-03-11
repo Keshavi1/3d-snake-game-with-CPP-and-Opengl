@@ -7,7 +7,7 @@
 
 #include <vector>
 
-enum CameraMovement{FRONT, BACK, RIGHT,LEFT,UP,DOWN};
+enum CameraMovement{RIGHT,LEFT,UP,DOWN};
 
 class Camera{
 public:
@@ -35,48 +35,52 @@ public:
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
+    // chages the direction of the camera in the appropriate direction
     void processkey(CameraMovement direction) {
         switch (direction) {
         case LEFT:
             baseYaw -= 90.0f;
             yaw = baseYaw;
+            basePitch = 0.0f;
             break;
         case RIGHT:
             baseYaw += 90.0f;
             yaw = baseYaw;
+            basePitch = 0.0f;
             break;
         case UP:
-            basePitch += 90.0f;
+            basePitch = 89.0f;
             pitch = basePitch;
             break;
         case DOWN:
-            basePitch -= 90.0f;
+            basePitch = -89.0f;
             pitch = basePitch;
             break;
         default:
             break;
         }
-        updateCamera();
     }
+    // moves the camera with the mouse
     void processMouseMov(float xoffset, float yoffset){
         xoffset *= sensitivity;
         yoffset *= sensitivity;
         yaw += xoffset;
         pitch += yoffset;
         
-        // if(yaw < 0.0f) yaw = 0.0f;
-        // if(yaw > 180.0f) yaw = 180.0f;
-        // if(pitch < basePitch - 60.0f) pitch = basePitch - 60.0f;
-        // if(pitch > basePitch + 60.0f) pitch = basePitch + 60.0f;
+        if(basePitch == 0.0f && yaw <baseYaw - 120.0f) yaw = baseYaw - 120.0f;
+        if(basePitch == 0.0f && yaw > baseYaw + 120.0f) yaw = baseYaw + 120.0f;
+        if(pitch < -89.0f) pitch = -89.0f;
+        if(pitch > 89.0f) pitch = 89.0f;
 
         updateCamera();
     }
     void processMouseScroll(float yoffset){
-        if(zoom > 1.0f && zoom < 45.0f)
+        if(zoom > 1.0f && zoom < 60.0f)
             zoom -= yoffset;
 
     }
 private:
+// sets the direction the camera is facing
     void updateCamera(){
         glm::vec3 front = glm::vec3(
             cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
@@ -86,7 +90,6 @@ private:
         Front = glm::normalize(front);
         Right = glm::normalize(glm::cross(Front,WorldUp));
         Up = glm::normalize(glm::cross(Right, Front));
-
     }
 };
 #endif

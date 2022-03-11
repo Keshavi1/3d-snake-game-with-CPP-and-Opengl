@@ -1,3 +1,11 @@
+/**
+ * @file main.cpp
+ * @author Keshavi
+ * @brief This is a simple 3d snake game made with c++ and opengl. I'll update it as I learn to do more with opengl & c++.
+ * @version 0.1
+ * @date 2022-03-10
+ */
+
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -13,13 +21,15 @@
 #include <vector>
 #include <random>
 
-// todo make a shake be able to move in 2d them 3d
 
 void frame_buffer_callback(GLFWwindow* window, int width, int height);
 void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void snakeMovement(CameraMovement headDirection);
+void updateObjects(GLFWwindow* window, Shader &shader);
+void snakeColision();
+void reset();
 
 const GLuint SCR_WIDTH = 800;
 const GLuint SCR_HEIGHT = 600;
@@ -58,10 +68,18 @@ GLuint indices[] = {
 // stores the vec positions of the bodyparts
 std::vector<glm::vec3> bodyPartPositions;
 std::vector<glm::vec3> objects;
+glm::vec3 objcolor;
+float objScale = 5.0f;
+std::vector<glm::vec3> apples;
+float appleScale = 2.0f;
 // direction moving and stores previous directions and positions
 glm::vec3 direction = glm::vec3(0.0f,0.0f,-1.0f);
 glm::vec3 lastdir = direction;
 glm::vec3 lastpos = glm::vec3(0.0f,0.0f,0.0f);
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution<> dis(-150.0f,150.0f), col(0.25f,1.0f), aplspawn(-80.0f,80.0f);
 
 int main(){
     glfwInit();
@@ -110,15 +128,16 @@ int main(){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     
-    for(float i = 0.0f; i < 5.0f;i++)
+    for(float i = 0.0f; i < 10.0f;i++)
         bodyPartPositions.push_back(glm::vec3(0.0f,0.0f,i));
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-30.0f,30.0f), col(0.0f,1.0f);
-    for(int i = 0; i < 100; i++)
-        objects.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
     
+    for(int i = 0; i < 50; i++)
+        objects.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
+    objcolor = glm::vec3(col(gen), col(gen), col(gen));
+    for(int i = 0; i < 40; ++i){
+        apples.push_back(bodyPartPositions[0] + glm::vec3(aplspawn(gen), aplspawn(gen), aplspawn(gen)));
+    }
 
     while(!glfwWindowShouldClose(window)){
         // timing logic
@@ -136,50 +155,8 @@ int main(){
         glm::mat4 view = camera.GetViewMatrix();
         shader.setUni("view", view);
         glBindVertexArray(VAO);
-        if((currentTime - lastMov)/deltaTime >= 2000.0f && glfwGetInputMode(window,GLFW_CURSOR) == GLFW_CURSOR_DISABLED){
-            lastMov = currentTime;
-            for(unsigned int i = 0; i < bodyPartPositions.size(); i++){
-                if(i == 0){//head
-                    //stores the curent position and moves the head and camera in the direction
-                    lastpos = bodyPartPositions[0];
-                    bodyPartPositions[0] += direction;
-                } else{
-                    // sets the position of the body to the previous position of the body in front of it
-                    glm::vec3 temp = bodyPartPositions[i];
-                    bodyPartPositions[i] = lastpos;
-                    lastpos = temp;
-                    // sets the camera position
-                    if(i == 1){
-                        if(direction.y == 0.0f){
-                            camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,2.0f,0.0f);
-                        } else if(direction.y >= 0.0f){
-                            direction.x == 0.0f ? camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,0.0f,2.0f)
-                            :camera.Position = bodyPartPositions[i] + glm::vec3(-2.0f,0.0f,0.0f);
-                        } else if(direction.y <= 0.0f){
-                            direction.x == 0.0f ? camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,0.0f,-2.0f)
-                            :camera.Position = bodyPartPositions[i] + glm::vec3(2.0f,0.0f,0.0f);
-                        }
-                    }
-                }
-            }
-        }
-        for(auto pos: bodyPartPositions){
-            // updates the model and draws the part
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model,pos);
-            shader.setUni("model",model);
-            shader.setUni("color", glm::vec3(0.0f,1.0f,0.0f));
-            glDrawElements(GL_TRIANGLES,sizeof(indices)/sizeof(int),GL_UNSIGNED_INT,0);
-        }
-        
-        // other objects
-        for(auto o: objects){
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, o);
-            shader.setUni("model",model);
-            shader.setUni("color",glm::vec3(col(gen), col(gen), col(gen)));
-            glDrawElements(GL_TRIANGLES,sizeof(indices)/sizeof(int),GL_UNSIGNED_INT,0);
-        }
+        updateObjects(window,shader);
+        snakeColision();
         glfwSwapBuffers(window);
         glfwPollEvents();
         
@@ -309,4 +286,111 @@ void snakeMovement(CameraMovement headDirection){
         break;
     }
     lastdir = temp;
+}
+
+void updateObjects(GLFWwindow* window, Shader &shader){
+    if((lastFrame - lastMov)/deltaTime >= 750.0f && glfwGetInputMode(window,GLFW_CURSOR) == GLFW_CURSOR_DISABLED){
+        lastMov = lastFrame;
+        for(unsigned int i = 0; i < bodyPartPositions.size(); i++){
+            if(i == 0){//head
+                //stores the curent position and moves the head and camera in the direction
+                lastpos = bodyPartPositions[0];
+                bodyPartPositions[0] += direction;
+            } else{
+                // sets the position of the body to the previous position of the body in front of it
+                glm::vec3 temp = bodyPartPositions[i];
+                bodyPartPositions[i] = lastpos;
+                lastpos = temp;
+                // sets the camera position
+                if(i == 1){
+                    if(direction.y == 0.0f){
+                        camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,2.0f,0.0f);
+                    } else if(direction.y >= 0.0f){
+                        direction.x == 0.0f ? camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,0.0f,2.0f)
+                        :camera.Position = bodyPartPositions[i] + glm::vec3(-2.0f,0.0f,0.0f);
+                    } else if(direction.y <= 0.0f){
+                        direction.x == 0.0f ? camera.Position = bodyPartPositions[i] + glm::vec3(0.0f,0.0f,-2.0f)
+                        :camera.Position = bodyPartPositions[i] + glm::vec3(2.0f,0.0f,0.0f);
+                    }
+                }
+            }
+        }
+    }
+    for(auto pos: bodyPartPositions){
+        // updates the model and draws the part
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model,pos);
+        shader.setUni("model",model);
+        shader.setUni("color", glm::vec3(0.0f,1.0f,0.0f));
+        shader.setUni("scale", 1.0f);
+        glDrawElements(GL_TRIANGLES,sizeof(indices)/sizeof(int),GL_UNSIGNED_INT,0);
+    }
+    // draws the apple
+    for(auto apl : apples){
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, apl);
+        shader.setUni("model", model);
+        shader.setUni("color", glm::vec3(1.0f,0.0f,0.0f));
+        shader.setUni("scale",appleScale);
+        glDrawElements(GL_TRIANGLES,sizeof(indices)/sizeof(int),GL_UNSIGNED_INT,0);
+    }
+    // other objects
+    for(auto o: objects){
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, o);
+        shader.setUni("model",model);
+        shader.setUni("color",objcolor);
+        shader.setUni("scale", objScale);
+        glDrawElements(GL_TRIANGLES,sizeof(indices)/sizeof(int),GL_UNSIGNED_INT,0);
+    }
+}
+
+void snakeColision(){
+    auto bpp = bodyPartPositions[0];
+    // checks if the head is inside an apple
+    for(unsigned int i = 0; i < apples.size(); i++){
+        if((bpp.x > apples[i].x && bpp.x < apples[i].x + 1.0f* appleScale) &&
+        (bpp.y > apples[i].y && bpp.y < apples[i].y + 1.0f* appleScale) && 
+        (bpp.z > apples[i].z && bpp.z < apples[i].z + 1.0f* appleScale)){
+            // deleats the apple, adds a body part, and ads a new apple near the head
+            apples.erase(apples.begin() + i);
+            bodyPartPositions.push_back(bodyPartPositions.back() + glm::vec3(0.0f,0.0f,1.0f));
+            apples.push_back(bodyPartPositions[0] + glm::vec3(aplspawn(gen), aplspawn(gen), aplspawn(gen)));
+        }
+    }
+    // player hits it self
+    for(unsigned int i = 1; i < bodyPartPositions.size(); ++i){
+        if(bpp == bodyPartPositions[i]){
+            reset();
+        }
+    }
+    // if the snake collides with other obsticles
+    for(unsigned int i = 1; i < objects.size(); ++i){
+        if((bpp.x > objects[i].x && bpp.x < objects[i].x + 1.0f* objScale) &&
+        (bpp.y > objects[i].y && bpp.y < objects[i].y + 1.0f* objScale) && 
+        (bpp.z > objects[i].z && bpp.z < objects[i].z + 1.0f* objScale)){
+            reset();
+        }
+    }
+}
+
+void reset(){
+    bodyPartPositions.clear();
+    apples.clear();
+    objects.clear();
+    for(float i = 0.0f; i < 10.0f;i++)
+        bodyPartPositions.push_back(glm::vec3(0.0f,0.0f,i));
+    for(int i = 0; i < 50; i++)
+        objects.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
+    objcolor = glm::vec3(col(gen), col(gen), col(gen));
+    for(int i = 0; i < 40; ++i){
+        apples.push_back(bodyPartPositions[0] + glm::vec3(aplspawn(gen), aplspawn(gen), aplspawn(gen)));
+    }
+    direction = glm::vec3(0.0f,0.0f,-1.0f);
+    lastdir = direction;
+    lastpos = glm::vec3(0.0f,0.0f,0.0f);
+    camera.baseYaw = -90.0f;
+    camera.yaw = -90.0f;
+    camera.basePitch = 0.0f;
+    camera.pitch = 0.0f;
 }

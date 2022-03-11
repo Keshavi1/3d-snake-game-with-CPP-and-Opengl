@@ -102,7 +102,7 @@ private:
     // converts text form a file to a string
     std::string get_file_contents(const char* fileName) {
         std::ifstream shaderFile;
-        shaderFile.exceptions(std::fstream::failbit | std::fstream::badbit);
+        shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         try{
             shaderFile.open(fileName);
             std::stringstream shaderStream;
