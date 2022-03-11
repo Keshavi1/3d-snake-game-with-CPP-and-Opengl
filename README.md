@@ -1,4 +1,4 @@
-# 3d-snake-game-with-c---and-opengl
+# 3d-snake-game-with-CPP-and-Opengl
 
 I'm back! It's been a while hasn't it. As you can see I have ben working on learning C++ and openGL. 
 
