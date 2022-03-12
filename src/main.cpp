@@ -349,9 +349,9 @@ void snakeColision(){
     auto bpp = bodyPartPositions[0];
     // checks if the head is inside an apple
     for(unsigned int i = 0; i < apples.size(); i++){
-        if((bpp.x > apples[i].x && bpp.x < apples[i].x + 1.0f* appleScale) &&
+        if((bpp.x + 1.0f> apples[i].x && bpp.x < apples[i].x + 1.0f* appleScale) &&
         (bpp.y > apples[i].y && bpp.y < apples[i].y + 1.0f* appleScale) && 
-        (bpp.z > apples[i].z && bpp.z < apples[i].z + 1.0f* appleScale)){
+        (bpp.z + 1.0f> apples[i].z && bpp.z < apples[i].z + 1.0f* appleScale)){
             // deleats the apple, adds a body part, and ads a new apple near the head
             apples.erase(apples.begin() + i);
             bodyPartPositions.push_back(bodyPartPositions.back() + glm::vec3(0.0f,0.0f,1.0f));
@@ -366,9 +366,9 @@ void snakeColision(){
     }
     // if the snake collides with other obsticles
     for(unsigned int i = 1; i < objects.size(); ++i){
-        if((bpp.x > objects[i].x && bpp.x < objects[i].x + 1.0f* objScale) &&
+        if((bpp.x + 1.0f> objects[i].x && bpp.x < objects[i].x + 1.0f* objScale) &&
         (bpp.y > objects[i].y && bpp.y < objects[i].y + 1.0f* objScale) && 
-        (bpp.z > objects[i].z && bpp.z < objects[i].z + 1.0f* objScale)){
+        (bpp.z + 1.0f> objects[i].z && bpp.z < objects[i].z + 1.0f* objScale)){
             reset();
         }
     }
