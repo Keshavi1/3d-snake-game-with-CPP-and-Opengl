@@ -13,7 +13,7 @@ class Camera{
 public:
     glm::vec3 Position, Up, Front, Right, WorldUp;
 
-    float baseYaw, basePitch, yaw, pitch, movSpeed, sensitivity, zoom;
+    float baseYaw, basePitch, yaw, pitch, sensitivity, zoom;
     bool firstMouse;
 
     Camera(glm::vec3 position = glm::vec3(0.0f,0.0f,0.0f)){
@@ -21,7 +21,6 @@ public:
         Up = glm::vec3(0.0f,1.0f,0.0f);
         WorldUp = Up;
         Front = glm::vec3(0.0f,0.0f,-1.0f);
-        movSpeed = 2.5f;
         sensitivity = 0.1f;
         zoom =45.0f;
         baseYaw = -90.0f;
@@ -67,8 +66,7 @@ public:
         yaw += xoffset;
         pitch += yoffset;
         
-        if(basePitch == 0.0f && yaw <baseYaw - 120.0f) yaw = baseYaw - 120.0f;
-        if(basePitch == 0.0f && yaw > baseYaw + 120.0f) yaw = baseYaw + 120.0f;
+
         if(pitch < -89.0f) pitch = -89.0f;
         if(pitch > 89.0f) pitch = 89.0f;
 
