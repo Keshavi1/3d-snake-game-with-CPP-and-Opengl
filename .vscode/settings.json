@@ -112,6 +112,7 @@
 		"Programiv",
 		"stbi",
 		"Stringi",
+		"struct",
 		"vect"
 	],
 	"cmake.configureOnOpen": false

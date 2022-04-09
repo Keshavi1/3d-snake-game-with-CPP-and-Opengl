@@ -1,0 +1,1 @@
+make.exe all -f E:\VSCode projects --print-data-base --no-builtin-variables --no-builtin-rules --question
